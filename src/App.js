@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import "./App.css";
 import mtg from "mtgsdk";
+import mtgtop8 from "mtgtop8";
+import { Scryfall } from "scryfall";
 
 class App extends Component {
   state = {
@@ -8,8 +10,37 @@ class App extends Component {
   };
 
   componentDidMount() {
-    mtg.card.find(3).then(result => {
-      this.setState({card : result.card.name});
+    // find a single card name
+    // mtg.card.find(4).then(result => {
+    //   this.setState({card : result.card.name});
+    // });
+
+    let test;
+
+    mtgtop8.standardEvents(1, function(err, events) {
+      if (err) return console.error(err);
+      // console.log(events);
+      // Get player results and decks about a specific event
+      mtgtop8.event(events[0].id, function(err, event) {
+        if (err) return console.error(err);
+        test = event;
+        console.log(test.decks[0].cards);
+      });
+    });
+
+
+    // mtgtop8.eventInfo(19182, function(err, event) {
+    //     console.log(event);
+    // });
+
+    Scryfall.getCard("bfz", 29, (err, card) => {
+        if (err) {
+            // If the call was successful, this will be null.
+        } else {
+            console.log(card.name); // "Gideon, Ally of Zendikar"
+            console.log(card.usd); // 4
+            // ...
+        }
     });
   }
 

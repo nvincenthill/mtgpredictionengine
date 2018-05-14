@@ -4,9 +4,11 @@
   "private": true,
   "dependencies": {
     "mtgsdk": "^0.3.0",
+    "mtgtop8": "^0.3.1",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
-    "react-scripts": "1.1.4"
+    "react-scripts": "1.1.4",
+    "scryfall": "^0.9.3"
   },
   "scripts": {
     "start": "react-scripts start",
