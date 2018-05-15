@@ -3,63 +3,103 @@ import "./App.css";
 // import mtg from "mtgsdk";
 import mtgtop8 from "mtgtop8";
 import { Scryfall } from "scryfall";
+import { Button, Well } from "react-bootstrap";
+import Footer from "./Footer";
 
 class App extends Component {
-  state = {
-    event: {},
-    load: false,
-    query: "exact=Karn+Scion+of+Urza",
+  constructor(props) {
+    super(props);
+    this.state = {
+      event: {},
+      load: false,
+      card: {},
+      value: ""
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+    // this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleErrors = response => {
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+    return response;
   };
 
-  // componentDidMount() {
-    // find a single card name
-    // mtg.card.find(4).then(result => {
-    //   this.setState({card : result.card.name});
-    // });
-    // mtgtop8.eventInfo(19182, function(err, event) {
-    //     console.log(event);
-    // });
-    // Scryfall.getCard("Karn, Scion of Urza", "name", (err, card) => {
-    //   if (err) {
-    //     console.log("ERROR");
-    //   } else {
-    //     console.log(card.name); // "Gideon, Ally of Zendikar"
-    //     console.log(card.usd); // 4
-    //     // ...
-    //   }
-    // });
-  // }
-
-  getCard = async (query) => {
-    fetch('https://api.scryfall.com/cards/named?' + query)
+  getCard = async => {
+    let query = this.state.value.split(" ").join("+");
+    console.log(query);
+    fetch("https://api.scryfall.com/cards/named?" + "fuzzy=" + query)
+      .then(this.handleErrors)
       .then(response => response.json())
       .then(data => this.setState({ card: data }));
-  }
+  };
 
   getData = async () => {
     console.log("Getting Data!");
-    let data = await mtgtop8.event(19182, function(err, event) {
-      if (err) {
-        return console.error(err);
-      } else {
-        // this.setState({ event: event });
-        console.log(event);
-      }
-    });
+    let data;
+    fetch(
+      mtgtop8.event(19182, function(err, event) {
+        if (err) {
+          alert(err);
+          return console.error(err);
+        } else {
+          // this.setState({ event: event });
+          console.log(event);
+          data = event;
+        }
+      })
+    ).then(this.updateData(data));
   };
 
   updateData(data) {
     this.setState({ event: data });
   }
 
+  handleChange(event) {
+    this.setState({ value: event.target.value });
+  }
+
   render() {
+    let image = (
+      <img
+        src={this.state.card.name ? this.state.card.image_uris.small : null}
+      />
+    );
     return (
       <div className="App">
         <header className="App-header">
-          <h1 className="App-title">Magic The Gathering Prediction Engine</h1>
+          <h1 className="App-title">MTG | Product and Pricing Engine</h1>
         </header>
-        <button onClick={() => this.getCard(this.state.query)}>Get Card Data</button>
-        <button onClick={this.getData}>Get Event Data</button>
+        <Button
+          className="button"
+          bsStyle="primary"
+          bsSize="large"
+          onClick={() => this.getCard(this.state.query)}
+        >
+          Get Card Data
+        </Button>
+        <Button
+          className="button"
+          bsStyle="primary"
+          bsSize="large"
+          onClick={this.getData}
+        >
+          Get Event Data
+        </Button>
+        <br />
+        <input type="text" name="username" onChange={this.handleChange} />
+        <br />
+        <Well>
+          {image}
+          <h3>Name: {this.state.card.name ? this.state.card.name : "n/a"}</h3>
+          <h4>
+            {" "}
+            Price: {this.state.card.usd ? "$" + this.state.card.usd : "n/a"}
+          </h4>
+        </Well>
+        <Footer />
       </div>
     );
   }
