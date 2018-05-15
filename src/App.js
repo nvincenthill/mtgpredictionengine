@@ -1,47 +1,55 @@
 import React, { Component } from "react";
 import "./App.css";
-import mtg from "mtgsdk";
+// import mtg from "mtgsdk";
 import mtgtop8 from "mtgtop8";
 import { Scryfall } from "scryfall";
 
 class App extends Component {
   state = {
-    card: ""
+    event: {},
+    load: false,
+    query: "exact=Karn+Scion+of+Urza",
   };
 
-  componentDidMount() {
+  // componentDidMount() {
     // find a single card name
     // mtg.card.find(4).then(result => {
     //   this.setState({card : result.card.name});
     // });
-
-    let test;
-
-    mtgtop8.standardEvents(1, function(err, events) {
-      if (err) return console.error(err);
-      // console.log(events);
-      // Get player results and decks about a specific event
-      mtgtop8.event(events[0].id, function(err, event) {
-        if (err) return console.error(err);
-        test = event;
-        console.log(test.decks[0].cards);
-      });
-    });
-
-
     // mtgtop8.eventInfo(19182, function(err, event) {
     //     console.log(event);
     // });
+    // Scryfall.getCard("Karn, Scion of Urza", "name", (err, card) => {
+    //   if (err) {
+    //     console.log("ERROR");
+    //   } else {
+    //     console.log(card.name); // "Gideon, Ally of Zendikar"
+    //     console.log(card.usd); // 4
+    //     // ...
+    //   }
+    // });
+  // }
 
-    Scryfall.getCard("bfz", 29, (err, card) => {
-        if (err) {
-            // If the call was successful, this will be null.
-        } else {
-            console.log(card.name); // "Gideon, Ally of Zendikar"
-            console.log(card.usd); // 4
-            // ...
-        }
+  getCard = async (query) => {
+    fetch('https://api.scryfall.com/cards/named?' + query)
+      .then(response => response.json())
+      .then(data => this.setState({ card: data }));
+  }
+
+  getData = async () => {
+    console.log("Getting Data!");
+    let data = await mtgtop8.event(19182, function(err, event) {
+      if (err) {
+        return console.error(err);
+      } else {
+        // this.setState({ event: event });
+        console.log(event);
+      }
     });
+  };
+
+  updateData(data) {
+    this.setState({ event: data });
   }
 
   render() {
@@ -50,7 +58,8 @@ class App extends Component {
         <header className="App-header">
           <h1 className="App-title">Magic The Gathering Prediction Engine</h1>
         </header>
-        <p className="App-intro">{this.state.card}</p>
+        <button onClick={() => this.getCard(this.state.query)}>Get Card Data</button>
+        <button onClick={this.getData}>Get Event Data</button>
       </div>
     );
   }
