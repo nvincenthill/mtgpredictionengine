@@ -12,21 +12,22 @@ const MyContext = React.createContext();
 // Then create a provider Component
 class MyProvider extends Component {
   constructor(props) {
-      super(props);
+    super(props);
 
-      this.state = {
-        event: {},
-        load: false,
-        card: {},
-        value: ""
-      };
+    this.state = {
+      eventData: [],
+      card: {},
+      value: "",
+      eventList: {}
+    };
 
-      this.updateData = this.updateData.bind(this);
-      this.getData = this.getData.bind(this);
+    this.updateData = this.updateData.bind(this);
+    this.getData = this.getData.bind(this);
+    this.getEventData = this.getEventData.bind(this);
+    this.loadData = this.loadData.bind(this);
   }
 
-
-
+  // get data about a single card
   getCard = async => {
     let query = this.state.value;
     fetch("https://api.scryfall.com/cards/named?" + "fuzzy=" + query)
@@ -34,35 +35,56 @@ class MyProvider extends Component {
       .then(data => this.setState({ card: data }));
   };
 
+  // get data about standard events
   getData = async () => {
     console.log("Getting Data!");
-    let data;
-    mtgtop8.event(19182, function(err, event) {
-      if (err) {
-        alert(err);
-        return console.error(err);
-      } else if (event) {
-        data = event;
-        console.log(data);
-        if (data) {
-          this.updateData(data);
-        }
-      }
-    });
-
+    // mtgtop8.event(19182, this.updateData);
+    mtgtop8.standardEvents(this.updateEvents);
   };
 
-  updateData = (data) => {
-    console.log("Setting state!");
-    this.setState({ event: data});
-    console.log(this.state.event);
-  }
+  // get data about a specific event
+  getEventData = async (eventID) => {
+    console.log("Getting Event Data for event # " + eventID);
+    mtgtop8.event(eventID, this.updateData);
+  };
 
-  handleChange = (event) => {
+  // callback to set events state
+  updateEvents = (err, events) => {
+    if (err) {
+      alert(err);
+      return console.error(err);
+    } else if (events) {
+      console.log(events);
+      this.setState({ eventList: events });
+    }
+  };
+
+
+  // callback to set a specific event state
+  updateData = (err, event) => {
+    if (err) {
+      alert(err);
+      return console.error(err);
+    } else if (event) {
+      console.log(event);
+      let joined = this.state.eventData.concat(event);
+      this.setState({ eventData: joined });
+    }
+  };
+
+  handleChange = event => {
     this.setState({ value: event.target.value });
-  }
+  };
 
-  componentDidMount() {}
+  loadData = () => {
+    for (let i = 0; i < 10; i++) {
+      this.getEventData(this.state.eventList[i].id);
+    }
+  };
+
+  componentDidMount() {
+    this.getData();
+  }
 
   render() {
     return (
@@ -72,7 +94,8 @@ class MyProvider extends Component {
           handleChange: this.handleChange,
           getCard: this.getCard,
           updateData: this.updateData,
-          getData: this.getData
+          getData: this.getData,
+          loadData: this.loadData
         }}
       >
         {this.props.children}
@@ -107,7 +130,7 @@ class App extends Component {
                   className="button"
                   bsStyle="primary"
                   bsSize="large"
-                  onClick={context.getData}
+                  onClick={context.loadData}
                 >
                   Get Event Data
                 </Button>
