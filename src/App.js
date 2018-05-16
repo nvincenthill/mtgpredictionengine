@@ -18,7 +18,8 @@ class MyProvider extends Component {
       eventData: [],
       card: {},
       value: "",
-      eventList: {}
+      eventList: [],
+      eventListLoaded: false
     };
 
     this.updateData = this.updateData.bind(this);
@@ -43,7 +44,7 @@ class MyProvider extends Component {
   };
 
   // get data about a specific event
-  getEventData = async (eventID) => {
+  getEventData = async eventID => {
     console.log("Getting Event Data for event # " + eventID);
     mtgtop8.event(eventID, this.updateData);
   };
@@ -55,10 +56,11 @@ class MyProvider extends Component {
       return console.error(err);
     } else if (events) {
       console.log(events);
-      this.setState({ eventList: events });
+      let joined = this.state.eventList.concat(events);
+      this.setState({ eventList: joined });
+      this.setState({ eventListLoaded: true });
     }
   };
-
 
   // callback to set a specific event state
   updateData = (err, event) => {
@@ -108,6 +110,16 @@ class MyProvider extends Component {
 
 class App extends Component {
   render() {
+    let eventTitles = (
+      <MyContext.Consumer>
+      {context => (
+        <React.Fragment>
+          {context.state.eventList.map((item) => <h4 key={item.id}>{item.title}</h4>)}
+        </React.Fragment>
+      )}
+      </MyContext.Consumer>
+    );
+
     return (
       <MyProvider>
         <div className="App">
@@ -122,25 +134,10 @@ class App extends Component {
                   className="button"
                   bsStyle="primary"
                   bsSize="large"
-                  onClick={context.getCard}
-                >
-                  Get Card Data
-                </Button>
-                <Button
-                  className="button"
-                  bsStyle="primary"
-                  bsSize="large"
                   onClick={context.loadData}
                 >
                   Get Event Data
                 </Button>
-                <br />
-                <input
-                  type="text"
-                  name="username"
-                  onChange={context.handleChange}
-                />
-                <br />
               </React.Fragment>
             )}
           </MyContext.Consumer>
@@ -149,24 +146,12 @@ class App extends Component {
             <MyContext.Consumer>
               {context => (
                 <React.Fragment>
-                  <img
-                    src={
-                      context.state.card.name
-                        ? context.state.card.image_uris.small
-                        : "did not load"
-                    }
-                    alt="did not load"
-                  />
                   <h3>
-                    Name:{" "}
-                    {context.state.card.name ? context.state.card.name : "n/a"}
+                    Events
                   </h3>
-                  <h4>
-                    Price:{" "}
-                    {context.state.card.usd
-                      ? "$" + context.state.card.usd
-                      : "n/a"}
-                  </h4>
+                  <div>
+                    {eventTitles}
+                  </div>
                 </React.Fragment>
               )}
             </MyContext.Consumer>
