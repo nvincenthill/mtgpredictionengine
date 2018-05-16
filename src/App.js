@@ -5,23 +5,30 @@ import "./App.css";
 import mtgtop8 from "mtgtop8";
 import { Button, Well } from "react-bootstrap";
 import Footer from "./Footer";
-import scryfall from "scryfall";
 
 // first we will make a new context
 const MyContext = React.createContext();
 
 // Then create a provider Component
 class MyProvider extends Component {
-  state = {
-    event: {},
-    load: false,
-    card: {},
-    value: ""
-  };
+  constructor(props) {
+      super(props);
+
+      this.state = {
+        event: {},
+        load: false,
+        card: {},
+        value: ""
+      };
+
+      this.updateData = this.updateData.bind(this);
+      this.getData = this.getData.bind(this);
+  }
+
+
 
   getCard = async => {
-    let query = this.state.value.split(" ").join("+");
-    console.log(query);
+    let query = this.state.value;
     fetch("https://api.scryfall.com/cards/named?" + "fuzzy=" + query)
       .then(response => response.json())
       .then(data => this.setState({ card: data }));
@@ -30,27 +37,32 @@ class MyProvider extends Component {
   getData = async () => {
     console.log("Getting Data!");
     let data;
-    fetch(
-      mtgtop8.event(19182, function(err, event) {
-        if (err) {
-          alert(err);
-          return console.error(err);
-        } else {
-          // this.setState({ event: event });
-          console.log(event);
-          data = event;
+    mtgtop8.event(19182, function(err, event) {
+      if (err) {
+        alert(err);
+        return console.error(err);
+      } else if (event) {
+        data = event;
+        console.log(data);
+        if (data) {
+          this.updateData(data);
         }
-      })
-    ).then(this.updateData(data));
+      }
+    });
+
   };
 
-  updateData(data) {
-    this.setState({ event: data });
+  updateData = (data) => {
+    console.log("Setting state!");
+    this.setState({ event: data});
+    console.log(this.state.event);
   }
 
-  handleChange(event) {
+  handleChange = (event) => {
     this.setState({ value: event.target.value });
   }
+
+  componentDidMount() {}
 
   render() {
     return (
@@ -81,7 +93,7 @@ class App extends Component {
           </header>
 
           <MyContext.Consumer>
-            {(context) => (
+            {context => (
               <React.Fragment>
                 <Button
                   className="button"
@@ -100,25 +112,37 @@ class App extends Component {
                   Get Event Data
                 </Button>
                 <br />
-                <input type="text" name="username" onChange={() => console.log("Changed")} />
+                <input
+                  type="text"
+                  name="username"
+                  onChange={context.handleChange}
+                />
                 <br />
               </React.Fragment>
             )}
           </MyContext.Consumer>
-          
-
 
           <Well>
             <MyContext.Consumer>
               {context => (
                 <React.Fragment>
+                  <img
+                    src={
+                      context.state.card.name
+                        ? context.state.card.image_uris.small
+                        : "did not load"
+                    }
+                    alt="did not load"
+                  />
                   <h3>
                     Name:{" "}
                     {context.state.card.name ? context.state.card.name : "n/a"}
                   </h3>
                   <h4>
                     Price:{" "}
-                    {context.state.card.usd ? "$" + context.state.card.usd : "n/a"}
+                    {context.state.card.usd
+                      ? "$" + context.state.card.usd
+                      : "n/a"}
                   </h4>
                 </React.Fragment>
               )}
