@@ -1,10 +1,13 @@
+// import dependencies
+
 import React, { Component } from "react";
 import "./App.css";
-// import mtg from "mtgsdk";
 import mtgtop8 from "mtgtop8";
-import { Scryfall } from "scryfall";
 import { Button, Well } from "react-bootstrap";
 import Footer from "./Footer";
+
+
+// define app component
 
 class App extends Component {
   constructor(props) {
@@ -20,18 +23,10 @@ class App extends Component {
     // this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleErrors = response => {
-    if (!response.ok) {
-      throw Error(response.statusText);
-    }
-    return response;
-  };
-
   getCard = async => {
     let query = this.state.value.split(" ").join("+");
     console.log(query);
     fetch("https://api.scryfall.com/cards/named?" + "fuzzy=" + query)
-      .then(this.handleErrors)
       .then(response => response.json())
       .then(data => this.setState({ card: data }));
   };
