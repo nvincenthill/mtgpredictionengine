@@ -5,23 +5,19 @@ import "./App.css";
 import mtgtop8 from "mtgtop8";
 import { Button, Well } from "react-bootstrap";
 import Footer from "./Footer";
+import scryfall from "scryfall";
 
+// first we will make a new context
+const MyContext = React.createContext();
 
-// define app component
-
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      event: {},
-      load: false,
-      card: {},
-      value: ""
-    };
-
-    this.handleChange = this.handleChange.bind(this);
-    // this.handleSubmit = this.handleSubmit.bind(this);
-  }
+// Then create a provider Component
+class MyProvider extends Component {
+  state = {
+    event: {},
+    load: false,
+    card: {},
+    value: ""
+  };
 
   getCard = async => {
     let query = this.state.value.split(" ").join("+");
@@ -57,45 +53,80 @@ class App extends Component {
   }
 
   render() {
-    let image = (
-      <img
-        src={this.state.card.name ? this.state.card.image_uris.small : null}
-      />
-    );
     return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">MTG | Product and Pricing Engine</h1>
-        </header>
-        <Button
-          className="button"
-          bsStyle="primary"
-          bsSize="large"
-          onClick={() => this.getCard(this.state.query)}
-        >
-          Get Card Data
-        </Button>
-        <Button
-          className="button"
-          bsStyle="primary"
-          bsSize="large"
-          onClick={this.getData}
-        >
-          Get Event Data
-        </Button>
-        <br />
-        <input type="text" name="username" onChange={this.handleChange} />
-        <br />
-        <Well>
-          {image}
-          <h3>Name: {this.state.card.name ? this.state.card.name : "n/a"}</h3>
-          <h4>
-            {" "}
-            Price: {this.state.card.usd ? "$" + this.state.card.usd : "n/a"}
-          </h4>
-        </Well>
-        <Footer />
-      </div>
+      <MyContext.Provider
+        value={{
+          state: this.state,
+          handleChange: this.handleChange,
+          getCard: this.getCard,
+          updateData: this.updateData,
+          getData: this.getData
+        }}
+      >
+        {this.props.children}
+      </MyContext.Provider>
+    );
+  }
+}
+
+// define app component
+
+class App extends Component {
+  render() {
+    return (
+      <MyProvider>
+        <div className="App">
+          <header className="App-header">
+            <h1 className="App-title">MTG | Product and Pricing Engine</h1>
+          </header>
+
+          <MyContext.Consumer>
+            {(context) => (
+              <React.Fragment>
+                <Button
+                  className="button"
+                  bsStyle="primary"
+                  bsSize="large"
+                  onClick={context.getCard}
+                >
+                  Get Card Data
+                </Button>
+                <Button
+                  className="button"
+                  bsStyle="primary"
+                  bsSize="large"
+                  onClick={context.getData}
+                >
+                  Get Event Data
+                </Button>
+                <br />
+                <input type="text" name="username" onChange={() => console.log("Changed")} />
+                <br />
+              </React.Fragment>
+            )}
+          </MyContext.Consumer>
+          
+
+
+          <Well>
+            <MyContext.Consumer>
+              {context => (
+                <React.Fragment>
+                  <h3>
+                    Name:{" "}
+                    {context.state.card.name ? context.state.card.name : "n/a"}
+                  </h3>
+                  <h4>
+                    Price:{" "}
+                    {context.state.card.usd ? "$" + context.state.card.usd : "n/a"}
+                  </h4>
+                </React.Fragment>
+              )}
+            </MyContext.Consumer>
+          </Well>
+          <Footer />
+        </div>
+      </MyProvider>
     );
   }
 }
